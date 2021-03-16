@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -21,10 +22,13 @@ var (
 	nodeTplFile   = flag.String("np", "node.tpl", "The v2ray node template file")
 	configTplFile = flag.String("cp", "config.tpl", "The v2ray client config file")
 	outputFile    = flag.String("o", "config.json", "The v2ray output config file")
-
+	uploadFile    = flag.Bool("u", false, "The v2ray upload to Aliyun OSS")
 	nodeText      = ""
 	nodeTplText   = ""
 	configTplText = ""
+
+	//go:embed config.tpl node.tpl nodes.txt
+	FS embed.FS
 )
 
 func main() {
@@ -37,28 +41,31 @@ func main() {
 
 	nodeBytes, err := ioutil.ReadFile(*nodeFile)
 	if err != nil {
-		flag.Usage()
-		return
+		nodeBytes, err = FS.ReadFile("nodes.txt")
 	}
 	nodeText = string(nodeBytes)
 
 	nodeTplBytes, err := ioutil.ReadFile(*nodeTplFile)
 	if err != nil {
-		flag.Usage()
-		return
+		nodeTplBytes, err = FS.ReadFile("node.tpl")
 	}
 	nodeTplText = string(nodeTplBytes)
 
 	configTplBytes, err := ioutil.ReadFile(*configTplFile)
 	if err != nil {
-		flag.Usage()
-		return
+		configTplBytes, err = FS.ReadFile("config.tpl")
 	}
 	configTplText = string(configTplBytes)
 
 	nodes := getNodes()
 	nodeConfigs := getNodeConfig(nodes)
 	config := getConfig(strings.Join(nodeConfigs, ","))
+
+	if *uploadFile {
+		uploadConfig(config)
+		return
+	}
+
 	createConfig(config)
 }
 
@@ -99,14 +106,17 @@ func getNodes() []vnode {
 			fmt.Println("invalid port:" + portStr)
 			continue
 		}
-		nodeInfo := vnode{
-			address: address,
-			uuid:    uuid,
-			wspath:  wspath,
-			port:    port,
+		// try ping
+		if telnet(address, port) {
+			nodeInfo := vnode{
+				address: address,
+				uuid:    uuid,
+				wspath:  wspath,
+				port:    port,
+			}
+			nodes = append(nodes, nodeInfo)
+			fmt.Println("Add : " + nodeSpec)
 		}
-		nodes = append(nodes, nodeInfo)
-		fmt.Println("Add : " + nodeSpec)
 	}
 	return nodes
 }
@@ -126,5 +136,5 @@ func getConfig(nodeConfigs string) string {
 }
 
 func createConfig(config string) {
-	ioutil.WriteFile(*outputFile, []byte(config), 0766)
+	_ = ioutil.WriteFile(*outputFile, []byte(config), 0766)
 }
