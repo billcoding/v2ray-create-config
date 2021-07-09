@@ -29,7 +29,7 @@
     }
   ],
   "outbounds": [
-	%s,
+	  %s,
     {
       "tag": "direct",
       "protocol": "freedom"
