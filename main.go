@@ -27,7 +27,7 @@ var (
 	nodeTplText   = ""
 	configTplText = ""
 
-	//go:embed config.tpl node.tpl nodes.txt
+	//go:embed tpls/config.tpl tpls/node.tpl
 	FS embed.FS
 )
 
@@ -41,19 +41,19 @@ func main() {
 
 	nodeBytes, err := ioutil.ReadFile(*nodeFile)
 	if err != nil {
-		nodeBytes, err = FS.ReadFile("nodes.txt")
+		panic(err)
 	}
 	nodeText = string(nodeBytes)
 
 	nodeTplBytes, err := ioutil.ReadFile(*nodeTplFile)
 	if err != nil {
-		nodeTplBytes, err = FS.ReadFile("node.tpl")
+		nodeTplBytes, err = FS.ReadFile("tpls/node.tpl")
 	}
 	nodeTplText = string(nodeTplBytes)
 
 	configTplBytes, err := ioutil.ReadFile(*configTplFile)
 	if err != nil {
-		configTplBytes, err = FS.ReadFile("config.tpl")
+		configTplBytes, err = FS.ReadFile("tpls/config.tpl")
 	}
 	configTplText = string(configTplBytes)
 

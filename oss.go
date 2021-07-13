@@ -3,21 +3,40 @@ package main
 import (
 	"bytes"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"os"
 )
 
 var (
-	endpoint        = "http://oss-cn-hangzhou.aliyuncs.com"
-	accessKeyId     = "LTAI4Fq3jJLvC1K7jfKWmrKM"
-	accessKeySecret = "a4TAV7wUDknhEgQcRgfsvQRHcxjHuY"
-	bucketName      = "v2ray-files"
+	endpoint        = ""
+	accessKeyId     = ""
+	accessKeySecret = ""
+	bucketName      = ""
+	objectName      = ""
 )
+
+func init() {
+	if n := os.Getenv("ENDPOINT"); n != "" {
+		endpoint = n
+	}
+	if n := os.Getenv("ACCESS_KEY_ID"); n != "" {
+		accessKeyId = n
+	}
+	if n := os.Getenv("ACCESS_KEY_SECRET"); n != "" {
+		accessKeySecret = n
+	}
+	if n := os.Getenv("BUCKET_NAME"); n != "" {
+		bucketName = n
+	}
+	if n := os.Getenv("OBJECT_NAME"); n != "" {
+		objectName = n
+	}
+}
 
 func uploadConfig(conf string) {
 	client, err := oss.New(endpoint, accessKeyId, accessKeySecret)
 	if err != nil {
 		panic(err)
 	}
-
 	bucket, err := client.Bucket(bucketName)
 	if err != nil {
 		panic(err)
@@ -27,7 +46,7 @@ func uploadConfig(conf string) {
 	if err != nil {
 		panic(err)
 	}
-	err = bucket.PutObject("custom-config/config-20200824.json", buf)
+	err = bucket.PutObject(objectName, buf)
 	if err != nil {
 		panic(err)
 	}
